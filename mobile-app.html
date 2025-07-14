@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>베리체인 AI - 안전관리 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 모바일 컨테이너 */
+        .mobile-container {
+            max-width: 430px;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 헤더 */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            padding-top: 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .header-icon:active {
+            transform: scale(0.9);
+        }
+
+        .worker-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .worker-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .worker-details {
+            flex: 1;
+        }
+
+        .worker-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .worker-location {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* 탭 네비게이션 */
+        .tab-nav {
+            display: flex;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 5;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* 컨텐츠 영역 */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        /* 체크리스트 뷰 */
+        .checklist-view {
+            padding: 20px;
+            display: none;
+        }
+
+        .checklist-view.active {
+            display: block;
+        }
+
+        .nfc-scanner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nfc-scanner:active {
+            transform: scale(0.98);
+        }
+
+        .nfc-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .nfc-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .checklist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .checklist-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checklist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .checklist-item:active {
+            transform: scale(0.98);
+        }
+
+        .checklist-item.checked {
+            border-color: #26de81;
+            background: #f8fcfa;
+        }
+
+        .checklist-item.warning {
+            border-color: #ffa502;
+            background: #fffdf5;
+        }
+
+        .checklist-item.danger {
+            border-color: #ff4757;
+            background: #fff5f5;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .checklist-item.checked .checkbox {
+            background: #26de81;
+            border-color: #26de81;
+        }
+
+        .checklist-item.warning .checkbox {
+            background: #ffa502;
+            border-color: #ffa502;
+        }
+
+        .checklist-item.danger .checkbox {
+            background: #ff4757;
+            border-color: #ff4757;
+        }
+
+        .checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .checklist-item.checked .checkbox::after,
+        .checklist-item.warning .checkbox::after,
+        .checklist-item.danger .checkbox::after {
+            opacity: 1;
+        }
+
+        .checklist-content {
+            flex: 1;
+        }
+
+        .checklist-text {
+            font-size: 0.95rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .checklist-detail {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .checklist-status {
+            font-size: 1.2rem;
+        }
+
+        /* AI 추가 점검 알림 */
+        .ai-suggestion {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-suggestion-icon {
+            font-size: 1.5rem;
+        }
+
+        .ai-suggestion-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        /* 챗봇 뷰 */
+        .chatbot-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chatbot-view.active {
+            display: flex;
+        }
+
+        .emergency-banner {
+            background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .emergency-banner:active {
+            transform: scale(0.98);
+        }
+
+        .emergency-icon {
+            font-size: 1.2rem;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f5f7fa;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: white;
+            color: #2c3e50;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .quick-actions {
+            background: white;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-action {
+            background: #f5f7fa;
+            border: 1px solid #e9ecef;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-action:active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-input-container {
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #f5f7fa;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .chat-input:focus {
+            background: white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .input-button:active {
+            transform: scale(0.9);
+        }
+
+        .input-button.voice {
+            background: #f5f7fa;
+            color: #667eea;
+        }
+
+        .input-button.camera {
+            background: #f5f7fa;
+            color: #667eea;
+        }
+
+        /* 타이핑 인디케이터 */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 15px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #7f8c8d;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* 안전 정보 카드 */
+        .safety-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 10px 0;
+        }
+
+        .safety-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .safety-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .safety-step {
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .safety-step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* 반응형 조정 */
+        @media (max-width: 430px) {
+            .mobile-container {
+                max-width: 100%;
+                height: 100vh;
+                box-shadow: none;
+            }
+        }
+
+        /* iOS 안전 영역 대응 */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .app-header {
+                padding-top: calc(20px + env(safe-area-inset-top));
+            }
+            
+            .chat-input-container {
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- 앱 헤더 -->
+        <div class="app-header">
+            <div class="header-content">
+                <h1 class="header-title">SAI(Safety AI)</h1>
+                <div class="header-icons">
+                    <span class="header-icon">🔔</span>
+                    <span class="header-icon">⚙️</span>
+                </div>
+            </div>
+            <div class="worker-info">
+                <div class="worker-avatar">👷</div>
+                <div class="worker-details">
+                    <div class="worker-name">김철수</div>
+                    <div class="worker-location">📍 A동 3층 작업장</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+            <button class="tab-button active" onclick="switchTab('checklist')">
+                📋 안전점검
+            </button>
+            <button class="tab-button" onclick="switchTab('chatbot')">
+                💬 AI 안전도우미
+            </button>
+        </div>
+
+        <!-- 컨텐츠 영역 -->
+        <div class="content-area">
+            <!-- 체크리스트 뷰 -->
+            <div class="checklist-view active">
+                <!-- NFC 스캐너 -->
+                <div class="nfc-scanner" onclick="scanNFC()">
+                    <div class="nfc-icon">📡</div>
+                    <div class="nfc-text">NFC 태그 스캔하기</div>
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px;">
+                        장비나 구역의 태그에 스마트폰을 대주세요
+                    </div>
+                </div>
+
+                <!-- 체크리스트 헤더 -->
+                <div class="checklist-header">
+                    <h2 class="checklist-title">오늘의 안전점검 항목</h2>
+                    <div class="ai-badge">
+                        <span>🤖</span>
+                        <span>AI 최적화</span>
+                    </div>
+                </div>
+
+                <!-- 체크리스트 항목들 -->
+                <div class="checklist-items">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-text">안전모 착용 상태 확인</div>
+                            <div class="checklist-detail">머리 보호장구 정상 착용 여부</div>
+                        </div>
+                        <div class="checklist-status">🪖</div>
+                    </div>
+
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-text">작업장 주변 정리정돈</div>
+                            <div class="checklist-detail">통로 확보 및 자재 적재 상태</div>
+                        </div>
+                        <div class="checklist-status">🧹</div>
+                    </div>
+
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-text">가스 감지기 작동 확인</div>
+                            <div class="checklist-detail">H2S, CO 감지기 정상 작동</div>
+                        </div>
+                        <div class="checklist-status">🚨</div>
+                    </div>
+
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-text">비상구 및 소화기 위치 확인</div>
+                            <div class="checklist-detail">대피로 확보 및 소화기 압력 체크</div>
+                        </div>
+                        <div class="checklist-status">🚪</div>
+                    </div>
+                </div>
+
+                <!-- AI 추가 점검 제안 -->
+                <div class="ai-suggestion" style="display: none;" id="aiSuggestion">
+                    <div class="ai-suggestion-icon">⚠️</div>
+                    <div class="ai-suggestion-text">
+                        <strong>AI 분석 결과:</strong> 최근 이 구역에서 추락 위험이 증가했습니다. 
+                        안전난간 점검 항목을 추가하시겠습니까?
+                    </div>
+                </div>
+            </div>
+
+            <!-- 챗봇 뷰 -->
+            <div class="chatbot-view">
+                <!-- 긴급 버튼 -->
+                <div class="emergency-banner" onclick="emergency()">
+                    <span class="emergency-icon">🚨</span>
+                    <span>긴급상황 발생 시 여기를 누르세요</span>
+                </div>
+
+                <!-- 채팅 메시지 영역 -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div>안녕하세요! 베리체인 AI 안전도우미입니다. 👋</div>
+                        <div class="message-time">오전 10:30</div>
+                    </div>
+                    <div class="message bot">
+                        <div>안전에 관한 모든 질문에 답변해드립니다. 무엇을 도와드릴까요?</div>
+                        <div class="message-time">오전 10:30</div>
+                    </div>
+                </div>
+
+                <!-- 빠른 액션 버튼들 -->
+                <div class="quick-actions">
+                    <div class="quick-action" onclick="quickQuestion('화학물질 누출')">화학물질 누출</div>
+                    <div class="quick-action" onclick="quickQuestion('응급처치')">응급처치</div>
+                    <div class="quick-action" onclick="quickQuestion('대피 경로')">대피 경로</div>
+                    <div class="quick-action" onclick="quickQuestion('안전장비')">안전장비</div>
+                    <div class="quick-action" onclick="quickQuestion('사고 신고')">사고 신고</div>
+                </div>
+
+                <!-- 입력 영역 -->
+                <div class="chat-input-container">
+                    <button class="input-button camera" onclick="capturePhoto()">📷</button>
+                    <input type="text" class="chat-input" id="chatInput" placeholder="안전 관련 질문을 입력하세요..." onkeypress="handleKeyPress(event)">
+                    <button class="input-button voice" onclick="startVoice()">🎤</button>
+                    <button class="input-button" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 탭 전환
+        function switchTab(tab) {
+            const buttons = document.querySelectorAll('.tab-button');
+            const checklistView = document.querySelector('.checklist-view');
+            const chatbotView = document.querySelector('.chatbot-view');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (tab === 'checklist') {
+                buttons[0].classList.add('active');
+                checklistView.classList.add('active');
+                chatbotView.classList.remove('active');
+            } else {
+                buttons[1].classList.add('active');
+                checklistView.classList.remove('active');
+                chatbotView.classList.add('active');
+            }
+        }
+
+        // 체크리스트 토글
+        function toggleCheck(item) {
+            if (item.classList.contains('checked')) {
+                item.classList.remove('checked');
+            } else {
+                item.classList.add('checked');
+                
+                // 3번째 항목 체크 시 AI 제안 표시
+                const checkedItems = document.querySelectorAll('.checklist-item.checked').length;
+                if (checkedItems === 3) {
+                    document.getElementById('aiSuggestion').style.display = 'flex';
+                }
+            }
+        }
+
+        // NFC 스캔 시뮬레이션
+        function scanNFC() {
+            alert('NFC 태그 스캔 중...\n\n장비: 가스 압축기 #A-301\n마지막 점검: 2시간 전\n상태: 정상');
+            
+            // 해당 장비에 맞는 체크리스트 추가
+            const newItem = document.createElement('div');
+            newItem.className = 'checklist-item warning';
+            newItem.onclick = function() { toggleCheck(this); };
+            newItem.innerHTML = `
+                <div class="checkbox"></div>
+                <div class="checklist-content">
+                    <div class="checklist-text">가스 압축기 압력 게이지 확인</div>
+                    <div class="checklist-detail">정상 범위: 3-5 bar (현재: 4.8 bar ⚠️)</div>
+                </div>
+                <div class="checklist-status">⚡</div>
+            `;
+            document.querySelector('.checklist-items').appendChild(newItem);
+        }
+
+        // 채팅 메시지 전송
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // AI 응답 시뮬레이션
+            showTypingIndicator();
+            setTimeout(() => {
+                removeTypingIndicator();
+                handleAIResponse(message);
+            }, 1500);
+        }
+
+        // 메시지 추가
+        function addMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            messageDiv.innerHTML = `
+                <div>${text}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // AI 응답 처리
+        function handleAIResponse(question) {
+            if (question.includes('황산') || question.includes('화학물질')) {
+                const safetyCard = document.createElement('div');
+                safetyCard.className = 'message bot';
+                safetyCard.innerHTML = `
+                    <div class="safety-card">
+                        <div class="safety-card-title">
+                            <span>⚠️</span>
+                            <span>황산 누출 시 즉시 대응 방법</span>
+                        </div>
+                        <ol class="safety-steps">
+                            <li class="safety-step">즉시 해당 구역에서 대피하세요</li>
+                            <li class="safety-step">오염된 의복은 제거하고 다량의 물로 15분 이상 세척</li>
+                            <li class="safety-step">중화제는 사용하지 마세요 (열 발생 위험)</li>
+                            <li class="safety-step">119에 신고하고 화학물질 정보 전달</li>
+                            <li class="safety-step">환기 시스템을 최대로 가동</li>
+                        </ol>
+                    </div>
+                    <div class="message-time">${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
+                `;
+                document.getElementById('chatMessages').appendChild(safetyCard);
+                
+                setTimeout(() => {
+                    addMessage('가장 가까운 응급실: 서울대병원 응급실 (5분 거리)\n☎️ 02-2072-2575\n🚑 즉시 이송 가능합니다.', 'bot');
+                }, 500);
+            } else if (question.includes('응급') || question.includes('처치')) {
+                addMessage('응급처치가 필요한 상황을 구체적으로 알려주세요:\n\n• 화상\n• 골절\n• 출혈\n• 의식불명\n• 감전\n• 질식\n\n각 상황별 맞춤 대응법을 안내해드립니다.', 'bot');
+            } else if (question.includes('대피')) {
+                addMessage('현재 위치(A동 3층)에서 가장 가까운 대피 경로:\n\n🚪 주 출구: 동쪽 계단 (30m)\n🚪 비상구: 서쪽 비상계단 (45m)\n📍 집결지: 본관 앞 광장\n\n⚠️ 엘리베이터는 사용하지 마세요!', 'bot');
+            } else {
+                addMessage('네, 이해했습니다. 더 구체적인 정보를 제공해주시면 정확한 안전 가이드를 제공해드릴 수 있습니다. 어떤 상황인지 자세히 설명해주세요.', 'bot');
+            }
+            
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        // 빠른 질문
+        function quickQuestion(topic) {
+            document.getElementById('chatInput').value = topic + ' 대응 방법 알려주세요';
+            sendMessage();
+        }
+
+        // 타이핑 인디케이터
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // 긴급상황
+        function emergency() {
+            if (confirm('🚨 긴급상황입니다!\n\n119에 자동으로 연결하시겠습니까?\n현재 위치정보가 함께 전송됩니다.')) {
+                alert('📞 119 연결중...\n\n현재 위치: A동 3층\nGPS: 37.5665, 126.9780\n작업자: 김철수\n\n잠시만 기다려주세요.');
+            }
+        }
+
+        // 음성 입력
+        function startVoice() {
+            alert('🎤 음성 인식을 시작합니다.\n\n"안전 관련 질문을 말씀해주세요..."');
+        }
+
+        // 사진 촬영
+        function capturePhoto() {
+            alert('📷 카메라가 실행됩니다.\n\n사고 현장이나 위험 요소를 촬영하면\nAI가 자동으로 분석해드립니다.');
+        }
+
+        // 엔터키 처리
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 페이지 로드 시 샘플 대화 추가
+        window.onload = function() {
+            // 실제 사용 예시를 보여주기 위한 샘플 대화
+            setTimeout(() => {
+                addMessage('작업 중에 손에 염산이 튀었어요!', 'user');
+                showTypingIndicator();
+                
+                setTimeout(() => {
+                    removeTypingIndicator();
+                    const safetyResponse = document.createElement('div');
+                    safetyResponse.className = 'message bot';
+                    safetyResponse.innerHTML = `
+                        <div class="safety-card">
+                            <div class="safety-card-title">
+                                <span>🚨</span>
+                                <span>염산 피부 접촉 시 응급조치</span>
+                            </div>
+                            <ol class="safety-steps">
+                                <li class="safety-step">즉시 다량의 흐르는 찬물로 15분 이상 세척</li>
+                                <li class="safety-step">세척 중 오염된 의복과 신발 제거</li>
+                                <li class="safety-step">비누 사용 금지 (중화 반응으로 열 발생)</li>
+                                <li class="safety-step">세척 후 깨끗한 거즈로 덮기</li>
+                                <li class="safety-step">즉시 병원 방문 (화학화상 가능성)</li>
+                            </ol>
+                        </div>
+                        <div class="message-time">오전 10:32</div>
+                    `;
+                    document.getElementById('chatMessages').appendChild(safetyResponse);
+                    
+                    setTimeout(() => {
+                        addMessage('📍 가까운 안전 샤워실: 복도 끝 좌측 (20m)\n🏥 의무실: 1층 로비 우측\n\n추가 증상이 있으면 즉시 알려주세요.', 'bot');
+                    }, 1000);
+                }, 2000);
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>베리체인 AI - 관리자 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f0f1e;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 네비게이션 */
+        nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
+
+        /* 메인 컨테이너 */
+        .dashboard-container {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* 상태 요약 카드 */
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, #1e1e30 0%, #2a2a40 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .status-card.danger::before {
+            background: linear-gradient(180deg, #ff4757 0%, #c44569 100%);
+        }
+
+        .status-card.warning::before {
+            background: linear-gradient(180deg, #ffa502 0%, #ff6348 100%);
+        }
+
+        .status-card.success::before {
+            background: linear-gradient(180deg, #26de81 0%, #20bf6b 100%);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            color: #a0a0b0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            opacity: 0.7;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-change {
+            font-size: 0.9rem;
+            color: #26de81;
+        }
+
+        .card-change.negative {
+            color: #ff4757;
+        }
+
+        /* 실시간 경고 패널 */
+        .alert-panel {
+            background: linear-gradient(135deg, #1e1e30 0%, #2a2a40 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .alert-title {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .alert-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .alert-level {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .alert-level.danger {
+            background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
+        }
+
+        .alert-level.warning {
+            background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
+        }
+
+        .alert-level.info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-location {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-message {
+            color: #a0a0b0;
+            font-size: 0.9rem;
+        }
+
+        .alert-time {
+            color: #707080;
+            font-size: 0.8rem;
+        }
+
+        /* 차트 섹션 */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #1e1e30 0%, #2a2a40 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+        }
+
+        .chart-period {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .period-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 5px;
+            color: #a0a0b0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .period-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 차트 더미 */
+        .chart-placeholder {
+            height: 300px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 200px;
+        }
+
+        .bar {
+            width: 30px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px 5px 0 0;
+            animation: grow 1s ease-out;
+        }
+
+        @keyframes grow {
+            from { height: 0; }
+        }
+
+        /* 작업자 목록 */
+        .worker-section {
+            background: linear-gradient(135deg, #1e1e30 0%, #2a2a40 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .worker-table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .worker-table th {
+            text-align: left;
+            padding: 1rem;
+            color: #a0a0b0;
+            font-weight: normal;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .worker-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .worker-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .worker-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .worker-status.active {
+            background: rgba(38, 222, 129, 0.2);
+            color: #26de81;
+        }
+
+        .worker-status.break {
+            background: rgba(255, 165, 2, 0.2);
+            color: #ffa502;
+        }
+
+        .worker-status.offline {
+            background: rgba(160, 160, 176, 0.2);
+            color: #a0a0b0;
+        }
+
+        /* 실시간 지표 애니메이션 */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #26de81;
+            font-size: 0.8rem;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #26de81;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-placeholder {
+                height: 200px;
+            }
+
+            .nav-right {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav>
+        <div class="logo">
+            <span>🛡️</span>
+            <span>SAI(Safety AI) 대시보드</span>
+        </div>
+        <div class="nav-right">
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>실시간 모니터링</span>
+            </div>
+            <div class="notification-icon">
+                <span>🔔</span>
+                <div class="notification-badge">3</div>
+            </div>
+            <div class="user-info">
+                <span>👤 관리자</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 대시보드 컨테이너 -->
+    <div class="dashboard-container">
+        <!-- 상태 요약 카드 -->
+        <div class="status-cards">
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-title">현재 작업자</div>
+                    <div class="card-icon">👷</div>
+                </div>
+                <div class="card-value">247</div>
+                <div class="card-change">▲ 12% 전일 대비</div>
+            </div>
+
+            <div class="status-card danger">
+                <div class="card-header">
+                    <div class="card-title">위험 경고</div>
+                    <div class="card-icon">⚠️</div>
+                </div>
+                <div class="card-value">3</div>
+                <div class="card-change negative">▲ 2건 증가</div>
+            </div>
+
+            <div class="status-card warning">
+                <div class="card-header">
+                    <div class="card-title">주의 알림</div>
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-value">15</div>
+                <div class="card-change">▼ 5% 감소</div>
+            </div>
+
+            <div class="status-card success">
+                <div class="card-header">
+                    <div class="card-title">안전 점검 완료</div>
+                    <div class="card-icon">✅</div>
+                </div>
+                <div class="card-value">98.5%</div>
+                <div class="card-change">▲ 0.5% 상승</div>
+            </div>
+        </div>
+
+        <!-- 실시간 경고 패널 -->
+        <div class="alert-panel">
+            <div class="alert-header">
+                <div class="alert-title">
+                    <span>🚨</span>
+                    <span>실시간 안전 알림</span>
+                </div>
+                <button class="period-btn">전체보기</button>
+            </div>
+            <div class="alert-list">
+                <div class="alert-item">
+                    <div class="alert-level danger">위험</div>
+                    <div class="alert-content">
+                        <div class="alert-location">A동 3층 화학물질 저장소</div>
+                        <div class="alert-message">가스 농도 임계치 초과 감지 (H2S: 15ppm)</div>
+                    </div>
+                    <div class="alert-time">2분 전</div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-level warning">주의</div>
+                    <div class="alert-content">
+                        <div class="alert-location">B동 건설현장</div>
+                        <div class="alert-message">안전모 미착용 작업자 감지</div>
+                    </div>
+                    <div class="alert-time">5분 전</div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-level info">정보</div>
+                    <div class="alert-content">
+                        <div class="alert-location">전체 구역</div>
+                        <div class="alert-message">오후 2시 정기 안전교육 예정</div>
+                    </div>
+                    <div class="alert-time">30분 전</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 차트 섹션 -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">📊 시간대별 위험도 분석</div>
+                    <div class="chart-period">
+                        <button class="period-btn active">오늘</button>
+                        <button class="period-btn">주간</button>
+                        <button class="period-btn">월간</button>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    <div class="chart-bars">
+                        <div class="bar" style="height: 40%"></div>
+                        <div class="bar" style="height: 60%"></div>
+                        <div class="bar" style="height: 45%"></div>
+                        <div class="bar" style="height: 80%"></div>
+                        <div class="bar" style="height: 30%"></div>
+                        <div class="bar" style="height: 50%"></div>
+                        <div class="bar" style="height: 70%"></div>
+                        <div class="bar" style="height: 55%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">🏭 구역별 안전 점수</div>
+                    <div class="chart-period">
+                        <button class="period-btn active">실시간</button>
+                        <button class="period-btn">일일</button>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    <div style="text-align: center; color: #a0a0b0;">
+                        <div style="font-size: 3rem; font-weight: bold; color: #26de81;">92.5</div>
+                        <div>전체 안전 점수</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업자 현황 -->
+        <div class="worker-section">
+            <div class="chart-header">
+                <div class="chart-title">👥 작업자 실시간 현황</div>
+                <button class="period-btn">상세보기</button>
+            </div>
+            <table class="worker-table">
+                <thead>
+                    <tr>
+                        <th>작업자명</th>
+                        <th>소속</th>
+                        <th>현재 위치</th>
+                        <th>상태</th>
+                        <th>최근 점검</th>
+                        <th>위험도</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>김철수</td>
+                        <td>건설팀 A</td>
+                        <td>A동 3층</td>
+                        <td><span class="worker-status active">작업중</span></td>
+                        <td>10:30</td>
+                        <td><span style="color: #ff4757;">⚠️ 높음</span></td>
+                    </tr>
+                    <tr>
+                        <td>이영희</td>
+                        <td>화학팀 B</td>
+                        <td>B동 실험실</td>
+                        <td><span class="worker-status active">작업중</span></td>
+                        <td>11:15</td>
+                        <td><span style="color: #ffa502;">⚡ 보통</span></td>
+                    </tr>
+                    <tr>
+                        <td>박민수</td>
+                        <td>전기팀 C</td>
+                        <td>휴게실</td>
+                        <td><span class="worker-status break">휴식중</span></td>
+                        <td>09:45</td>
+                        <td><span style="color: #26de81;">✅ 낮음</span></td>
+                    </tr>
+                    <tr>
+                        <td>정다은</td>
+                        <td>기계팀 D</td>
+                        <td>-</td>
+                        <td><span class="worker-status offline">오프라인</span></td>
+                        <td>어제</td>
+                        <td><span style="color: #a0a0b0;">- 없음</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 실시간 데이터 업데이트 시뮬레이션
+        setInterval(() => {
+            // 현재 작업자 수 업데이트
+            const workerCount = document.querySelector('.card-value');
+            const currentValue = parseInt(workerCount.textContent);
+            const newValue = currentValue + Math.floor(Math.random() * 5) - 2;
+            workerCount.textContent = Math.max(240, Math.min(255, newValue));
+        }, 5000);
+
+        // 알림 클릭 이벤트
+        document.querySelectorAll('.alert-item').forEach(item => {
+            item.addEventListener('click', () => {
+                console.log('Alert clicked:', item.querySelector('.alert-message').textContent);
+            });
+        });
+
+        // 차트 기간 버튼 토글
+        document.querySelectorAll('.chart-period').forEach(group => {
+            const buttons = group.querySelectorAll('.period-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
